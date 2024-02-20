@@ -16,7 +16,7 @@ struct PetConsoleWidget: Widget {
             EntryView(entry: $0)
         }
         .configurationDisplayName("Pet Console Widget")
-        .description("Interact with elements of the Widget.")
+        .description("Enjoy your time with cute tamagotchi.")
         .supportedFamilies([.systemSmall])
         .contentMarginsDisabled()
     }
