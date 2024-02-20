@@ -22,12 +22,23 @@ extension PetConsoleWidget {
                 Image("console_frame")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .containerBackground(.green, for: .widget)
 
                 HStack(alignment: .center, spacing: 8, content: {
-
+                    Button(intent: FeedIntent()) {
+                        Image("button_eat")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 56, height: 34)
+                    }
+                    Button(intent: PlayIntent()) {
+                        Image("button_play")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 56, height: 34)
+                    }
                 })
             })
+            .containerBackground(.green, for: .widget)
         }
     }
 }
