@@ -22,17 +22,21 @@ extension PetConsoleWidget {
         func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
             let currentDate = Date()
             let seconds = Calendar.current.component(.second, from: currentDate)
-            let startDate = currentDate.adding(.second, value: -seconds)
-            let entries = (0..<30).map { // 60 seconds total, so 30 intervals of 2 seconds each
-                let date = startDate.addingTimeInterval(Double($0 * 2))
-                let imageName = "frame\($0 % 2 + 1)" // Cycle between "frame1" and "frame2"
+            let startDate = currentDate.addingTimeInterval(-Double(seconds))
+
+            // Configurable variables
+            let frameCount = 2 // Number of frames in your animation sequence
+            let frameInterval: Double = 1.5 // Interval in seconds between frames, now supports decimal values
+
+            // Calculate the number of entries based on the total duration and frame interval
+            let totalDuration: Double = 60 // Assuming a total animation cycle duration of 60 seconds
+            let numberOfEntries = Int(totalDuration / frameInterval)
+
+            let entries = (0..<numberOfEntries).map {
+                let date = startDate.addingTimeInterval(Double($0) * frameInterval)
+                let imageName = "frame\(($0 % frameCount) + 1)" // Cycle through frame1, frame2, ..., frameN
                 return Entry(date: date, petAssetName: imageName)
             }
-//            let entries = (0 ..< 60).map {
-//                let date = startDate.adding(.second, value: $0 * 60 - 1)
-//                let imageName = "frame\($0 % 2 + 1)"
-//                return Entry(date: date, petAssetName: imageName)
-//            }
             completion(.init(entries: entries, policy: .atEnd))
         }
     }
