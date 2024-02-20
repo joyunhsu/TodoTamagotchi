@@ -34,10 +34,21 @@ extension PetConsoleWidget {
 
             let entries = (0..<numberOfEntries).map {
                 let date = startDate.addingTimeInterval(Double($0) * frameInterval)
-                let imageName = "frame\(($0 % frameCount) + 1)" // Cycle through frame1, frame2, ..., frameN
+                let frameIndex = $0 % frameCount // Cycle through frame1, frame2, ..., frameN
+                let imageName = currentProfile().lifecycle.imageName(forFrame: frameIndex)
                 return Entry(date: date, petAssetName: imageName)
             }
             completion(.init(entries: entries, policy: .atEnd))
+        }
+
+        private func currentProfile() -> Profile {
+            let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
+            if let lifeCycleString = userDefaults?.string(forKey: "LifeCycleStringKey"),
+               let lifeCycle = Profile.Lifecycle(rawValue: lifeCycleString) {
+                return Profile(lifecycle: lifeCycle)
+            } else {
+                return Profile(lifecycle: .egg)
+            }
         }
     }
 }

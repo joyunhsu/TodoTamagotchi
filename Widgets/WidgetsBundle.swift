@@ -10,8 +10,19 @@ import SwiftUI
 
 @main
 struct WidgetsBundle: WidgetBundle {
+    
+    let profile: Profile = {
+        let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
+        if let lifeCycleString = userDefaults?.string(forKey: "LifeCycleStringKey"),
+           let lifeCycle = Profile.Lifecycle(rawValue: lifeCycleString) {
+            return Profile(lifecycle: lifeCycle)
+        } else {
+            return Profile(lifecycle: .egg)
+        }
+    }()
+
     var body: some Widget {
-        PetConsoleWidget()
+        PetConsoleWidget(profile: profile)
     }
 }
 

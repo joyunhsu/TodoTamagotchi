@@ -9,7 +9,17 @@ import SwiftUI
 import WidgetKit
 
 struct PetConsoleWidget: Widget {
+
+    init() {
+        fatalError("Must call init with profile")
+    }
+
+    init(profile: Profile) {
+        self.profile = profile
+    }
+
     private let kind: String = WidgetType.petConsole.kind
+    private var profile: Profile
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) {
