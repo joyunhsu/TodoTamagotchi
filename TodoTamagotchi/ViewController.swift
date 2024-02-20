@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import SnapKit
 
 class ViewController: UIViewController {
 
@@ -38,103 +39,131 @@ class ViewController: UIViewController {
         return petView
     }()
 
-    let petShadowView: UIView = {
-        let petShadowView = UIView()
-        petShadowView.translatesAutoresizingMaskIntoConstraints = false
-        petShadowView.backgroundColor = .black
-        petShadowView.alpha = 0.3
-        petShadowView.transform = .init(scaleX: 1, y: 0.3)
-        petShadowView.widthAnchor.constraint(equalTo: petShadowView.heightAnchor).isActive = true
-        return petShadowView
-    }()
-
     let descLabel: UILabel = {
         let descLabel = UILabel()
         descLabel.translatesAutoresizingMaskIntoConstraints = false
         descLabel.numberOfLines = 0
-        descLabel.text = "Desc"
-        descLabel.backgroundColor = .init(white: 1, alpha: 0.7)
+        descLabel.backgroundColor = .clear
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 5
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byWordWrapping
+
+        let attributedString = NSAttributedString(
+            string: "Loading...",
+            attributes: [
+            .font: UIFont.descriptionLabel,
+            .foregroundColor: UIColor.label,
+            .paragraphStyle: paragraphStyle
+        ])
+        descLabel.attributedText = attributedString
         return descLabel
-    }()
-
-    let floorView: UIView = {
-        let floorView = UIView()
-        floorView.translatesAutoresizingMaskIntoConstraints = false
-        floorView.backgroundColor = .brown
-        return floorView
-    }()
-
-    let skyView: UIView = {
-        let skyView = UIView()
-        skyView.translatesAutoresizingMaskIntoConstraints = false
-        skyView.backgroundColor = .blue
-        return skyView
     }()
 
     lazy var refreshBtn: UIButton = {
         let refreshBtn = UIButton()
-        refreshBtn.translatesAutoresizingMaskIntoConstraints = false
-        refreshBtn.backgroundColor = .gray
+        refreshBtn.setImage(UIImage(named: "btn_refresh"), for: .normal)
         refreshBtn.addTarget(self, action: #selector(refresh), for: .touchUpInside)
         return refreshBtn
     }()
 
     let loadingView: UIActivityIndicatorView = {
         let loadingView = UIActivityIndicatorView()
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
         loadingView.hidesWhenStopped = true
         loadingView.stopAnimating()
         return loadingView
     }()
 
     override func viewDidLoad() {
+//        for family in UIFont.familyNames.sorted() {
+//            let names = UIFont.fontNames(forFamilyName: family)
+//            print("Family: \(family) Font names: \(names)")
+//        }
+
         // Do any additional setup after loading the view.
         super.viewDidLoad()
+        view.backgroundColor = UIColor.beige
+
+        let titleLabel = { () -> UILabel in
+            let label = UILabel()
+            label.text = "Release Band"
+            label.font = .titleLabel
+            label.numberOfLines = 0
+            label.textColor = .label
+            label.textAlignment = .center
+            return label
+        }()
+        view.addSubview(titleLabel)
+        titleLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(view.snp.topMargin).offset(130)
+        }
+
+        let subtitleLabel = { () -> UILabel in
+            let label = UILabel()
+            label.text = "24A Cycle 5"
+            label.font = .subtitleLabel
+            label.numberOfLines = 0
+            label.textColor = .label
+            label.textAlignment = .center
+            return label
+        }()
+        view.addSubview(subtitleLabel)
+        subtitleLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(titleLabel.snp.bottom).offset(10)
+        }
 
         view.addSubview(petView)
-        petView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        petView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50).isActive = true
-        petView.widthAnchor.constraint(equalToConstant: 300).isActive = true
-        petView.heightAnchor.constraint(equalToConstant: 300).isActive = true
-
-        view.addSubview(petShadowView)
-        view.sendSubviewToBack(petShadowView)
-        petShadowView.centerYAnchor.constraint(equalTo: petView.centerYAnchor, constant: 100).isActive = true
-        petShadowView.leadingAnchor.constraint(equalTo: petView.leadingAnchor).isActive = true
-        petShadowView.trailingAnchor.constraint(equalTo: petView.trailingAnchor).isActive = true
+        petView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(24)
+            make.width.height.equalTo(282)
+        }
 
         view.addSubview(descLabel)
-        descLabel.centerXAnchor.constraint(equalTo: petView.centerXAnchor).isActive = true
-        descLabel.centerYAnchor.constraint(equalTo: petShadowView.centerYAnchor, constant: 100).isActive = true
-        descLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10).isActive = true
-        descLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10).isActive = true
+        descLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(petView.snp.bottom).offset(44)
+            make.leading.trailing.equalToSuperview().inset(26)
+        }
 
-        view.addSubview(floorView)
-        view.sendSubviewToBack(floorView)
-        floorView.topAnchor.constraint(equalTo: petView.centerYAnchor, constant: 50).isActive = true
-        floorView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        floorView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        floorView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        let clickUpBtnImageView = { () -> UIImageView in
+            let view = UIImageView()
+            view.image = UIImage(named: "btn_icon+text")
+            view.contentMode = .scaleAspectFill
+            view.frame.size = CGSize(width: 121, height: 40)
+            return view
+        }()
 
-        view.addSubview(skyView)
-        view.sendSubviewToBack(skyView)
-        skyView.frame = UIScreen.main.bounds
+        let buttonContainerView = UIView()
+        view.addSubview(buttonContainerView)
+        buttonContainerView.addSubview(refreshBtn)
+        buttonContainerView.addSubview(clickUpBtnImageView)
 
-        view.addSubview(refreshBtn)
-        refreshBtn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10).isActive = true
-        refreshBtn.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10).isActive = true
+        refreshBtn.snp.makeConstraints { make in
+            make.width.height.equalTo(40)
+            make.leading.centerY.equalToSuperview()
+        }
+
+        clickUpBtnImageView.snp.makeConstraints { make in
+            make.width.equalTo(121)
+            make.height.equalTo(40)
+            make.trailing.centerY.equalToSuperview()
+        }
+
+        buttonContainerView.snp.makeConstraints { make in
+            make.width.equalTo(173)
+            make.height.equalTo(40)
+            make.bottom.equalTo(view.snp.bottomMargin).offset(-30)
+            make.centerX.equalToSuperview()
+        }
 
         view.addSubview(loadingView)
-        loadingView.topAnchor.constraint(equalTo: refreshBtn.topAnchor).isActive = true
-        loadingView.bottomAnchor.constraint(equalTo: refreshBtn.bottomAnchor).isActive = true
-        loadingView.leadingAnchor.constraint(equalTo: refreshBtn.leadingAnchor).isActive = true
-        loadingView.trailingAnchor.constraint(equalTo: refreshBtn.trailingAnchor).isActive = true
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-
-        petShadowView.layer.cornerRadius = petShadowView.bounds.width / 2
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalTo(refreshBtn)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -155,6 +184,7 @@ class ViewController: UIViewController {
         Task {
             do {
                 loadingView.startAnimating()
+                descLabel.text = "Loading..."
                 profile = try await remoteService.updateProfile()
                 loadingView.stopAnimating()
             } catch {
@@ -182,7 +212,7 @@ struct Profile {
         case chick
         case fledgling
         case grownChicken
-        case finishLineChicken
+        case finishLine
 
         var desc: String {
             switch self {
@@ -196,7 +226,7 @@ struct Profile {
                 return "Building strength and learning fast. It's a big world, but bit by bit, I'm conquering it."
             case .grownChicken:
                 return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
-            case .finishLineChicken:
+            case .finishLine:
                 return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
             }
         }
@@ -241,5 +271,17 @@ class RemoteService {
         String(data: data, encoding: .utf8).map { print($0) }
         return try JSONDecoder().decode(Profile.self, from: data)
     }
+}
+
+extension UIColor {
+    static let beige = UIColor(red: 226/255, green: 221/255, blue: 215/255, alpha: 1)
+    static let label = UIColor(red: 36/255, green: 36/255, blue: 36/255, alpha: 1)
+    static let darkButton = UIColor(red: 48/255, green: 48/255, blue: 54/255, alpha: 1)
+}
+
+extension UIFont {
+    static let titleLabel = UIFont(name: "JoystixMonospace-Regular", size: 26)
+    static let subtitleLabel = UIFont(name: "Dogica", size: 16)
+    static let descriptionLabel = UIFont(name: "Dogica", size: 13)
 }
 

@@ -57,7 +57,7 @@ extension PetConsoleWidget {
                 }
             }
             .edgesIgnoringSafeArea(.all) // If you want the content to fill the entire widget view, including the edges
-            .containerBackground(.green, for: .widget)
+            .containerBackground(Color(uiColor: UIColor(red: 83/255, green: 180/255, blue: 65/255, alpha: 1.0)), for: .widget)
         }
     }
 }

@@ -27,7 +27,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             .chick: "egg_1-2",
             .fledgling: "egg_2-3",
             .grownChicken: "egg_3-4",
-            .finishLineChicken: "egg_4-5"
+            .finishLine: "egg_4-5"
         ])
         window?.rootViewController = vc
     }
