@@ -9,7 +9,7 @@ import AppIntents
 import WidgetKit
 import SwiftUI
 
-struct FeedIntent: AppIntent {
+struct HeartIntent: AppIntent {
 
     static var title: LocalizedStringResource = "Feed tamagotchi"
 
@@ -18,7 +18,7 @@ struct FeedIntent: AppIntent {
     }
 }
 
-struct PlayIntent: AppIntent {
+struct RestIntent: AppIntent {
 
     static var title: LocalizedStringResource = "Play with tamagotchi"
 
