@@ -18,6 +18,7 @@ struct PetConsoleWidget: Widget {
         .configurationDisplayName("Pet Console Widget")
         .description("Interact with elements of the Widget.")
         .supportedFamilies([.systemSmall])
+        .contentMarginsDisabled()
     }
 }
 

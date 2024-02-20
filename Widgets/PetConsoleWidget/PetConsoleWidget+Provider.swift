@@ -25,8 +25,8 @@ extension PetConsoleWidget {
             let startDate = currentDate.addingTimeInterval(-Double(seconds))
 
             // Configurable variables
-            let frameCount = 2 // Number of frames in your animation sequence
-            let frameInterval: Double = 1.5 // Interval in seconds between frames, now supports decimal values
+            let frameCount = 4 // Number of frames in your animation sequence
+            let frameInterval: Double = 1 // Interval in seconds between frames, now supports decimal values
 
             // Calculate the number of entries based on the total duration and frame interval
             let totalDuration: Double = 60 // Assuming a total animation cycle duration of 60 seconds

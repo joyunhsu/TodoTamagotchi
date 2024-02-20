@@ -13,15 +13,21 @@ extension PetConsoleWidget {
     struct EntryView: View {
         let entry: Entry
 
-        let assetNames: [String] = [
-            "frame1", "frame2"
-        ]
-
         var body: some View {
-            Image(entry.petAssetName)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .containerBackground(.clear, for: .widget)
+            ZStack(content: {
+                Image(entry.petAssetName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+
+                Image("console_frame")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .containerBackground(.green, for: .widget)
+
+                HStack(alignment: .center, spacing: 8, content: {
+
+                })
+            })
         }
     }
 }
