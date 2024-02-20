@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "egg_2-6.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

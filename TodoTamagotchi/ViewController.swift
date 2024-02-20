@@ -8,6 +8,7 @@
 import Combine
 import UIKit
 import SnapKit
+import WidgetKit
 
 class ViewController: UIViewController {
 
@@ -53,9 +54,9 @@ class ViewController: UIViewController {
         let attributedString = NSAttributedString(
             string: "Loading...",
             attributes: [
-            .font: UIFont.descriptionLabel,
-            .foregroundColor: UIColor.label,
-            .paragraphStyle: paragraphStyle
+                .font: UIFont.descriptionLabel ?? .systemFont(ofSize: 13),
+                .foregroundColor: UIColor.label,
+                .paragraphStyle: paragraphStyle
         ])
         descLabel.attributedText = attributedString
         return descLabel
@@ -76,11 +77,6 @@ class ViewController: UIViewController {
     }()
 
     override func viewDidLoad() {
-//        for family in UIFont.familyNames.sorted() {
-//            let names = UIFont.fontNames(forFamilyName: family)
-//            print("Family: \(family) Font names: \(names)")
-//        }
-
         // Do any additional setup after loading the view.
         super.viewDidLoad()
         view.backgroundColor = UIColor.beige
@@ -187,6 +183,7 @@ class ViewController: UIViewController {
                 descLabel.text = "Loading..."
                 profile = try await remoteService.updateProfile()
                 loadingView.stopAnimating()
+                WidgetCenter.shared.reloadTimelines(ofKind: "petConsoleWidget")
             } catch {
                 profile = .init(lifecycle: .chick)
                 print(error)
@@ -206,7 +203,7 @@ class ViewController: UIViewController {
 
 struct Profile {
     let lifecycle: Lifecycle
-    enum Lifecycle: Decodable {
+    enum Lifecycle: String, Decodable {
         case egg
         case crackedEgg
         case chick
@@ -241,14 +238,19 @@ extension Profile: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let completeness = try container.decode(Double.self, forKey: .completeness)
+        let epsilon = 0.0001
 
         switch completeness {
-        case 0.7 ..< 1:
+        case 0.8 ..< 1:
+            self.lifecycle = .finishLine
+        case 0.6 ..< 0.8:
             self.lifecycle = .grownChicken
-        case 0.5 ..< 0.7:
+        case 0.4 ..< 0.6:
             self.lifecycle = .fledgling
-        case 0.3 ..< 0.5:
+        case 0.2 ..< 0.4:
             self.lifecycle = .chick
+        case epsilon ..< 0.2:
+            self.lifecycle = .crackedEgg
         default:
             self.lifecycle = .egg
         }
@@ -260,7 +262,9 @@ class RemoteService {
         let url = URL(string: "https://sprint-tamagotchi.vercel.app/api/stats?value=8.35")!
         let (data, _) = try await URLSession.shared.data(from: url)
         String(data: data, encoding: .utf8).map { print($0) }
-        return try JSONDecoder().decode(Profile.self, from: data)
+        let profile = try JSONDecoder().decode(Profile.self, from: data)
+        save(profile)
+        return profile
     }
 
     func updateProfile() async throws -> Profile {
@@ -269,7 +273,14 @@ class RemoteService {
         request.httpMethod = "POST"
         let (data, _) = try await URLSession.shared.data(for: request)
         String(data: data, encoding: .utf8).map { print($0) }
-        return try JSONDecoder().decode(Profile.self, from: data)
+        let profile = try JSONDecoder().decode(Profile.self, from: data)
+        save(profile)
+        return profile
+    }
+
+    private func save(_ profile: Profile) {
+        let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
+        userDefaults?.set(profile.lifecycle.rawValue, forKey: "LifeCycleStringKey")
     }
 }
 
