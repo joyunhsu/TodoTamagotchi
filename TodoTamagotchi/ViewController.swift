@@ -11,8 +11,20 @@ import UIKit
 class ViewController: UIViewController {
 
     let petImages: [Profile.Lifecycle: UIImage]
-    init(petImages: [Profile.Lifecycle: UIImage]) {
-        self.petImages = petImages
+    init(petAssetNames: [Profile.Lifecycle: String]) {
+        var images = [Profile.Lifecycle: UIImage]()
+
+        for (lifecycle, assetName) in petAssetNames {
+            if let url = Bundle.main.url(forResource: assetName, withExtension: "gif"),
+               let imageData = try? Data(contentsOf: url),
+               let gifImage = UIImage.gifImageWithData(imageData) {
+                images[lifecycle] = gifImage
+            } else {
+                print("Failed to load GIF for asset name: \(assetName)")
+            }
+        }
+
+        self.petImages = images
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -166,19 +178,25 @@ struct Profile {
     let lifecycle: Lifecycle
     enum Lifecycle: Decodable {
         case egg
+        case crackedEgg
         case chick
         case fledgling
         case grownChicken
+        case finishLineChicken
 
         var desc: String {
             switch self {
             case .egg:
+                return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
+            case .crackedEgg:
                 return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
             case .chick:
                 return "Just hatched, everything is new, exciting, and a little scary. I'm small but willing to grow."
             case .fledgling:
                 return "Building strength and learning fast. It's a big world, but bit by bit, I'm conquering it."
             case .grownChicken:
+                return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
+            case .finishLineChicken:
                 return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
             }
         }
@@ -224,28 +242,4 @@ class RemoteService {
         return try JSONDecoder().decode(Profile.self, from: data)
     }
 }
-
-//import UIKit
-//import SnapKit
-
-//class ViewController: UIViewController {
-//
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        view.backgroundColor = .white
-//
-//        let imageData = try? Data(contentsOf: Bundle.main.url(forResource: "pixelCat", withExtension: "gif")!)
-//        let advTimeGif = UIImage.gifImageWithData(imageData!)
-//        let imageView = UIImageView(image: advTimeGif)
-//        imageView.contentMode = .scaleAspectFit
-//        view.addSubview(imageView)
-//        imageView.snp.makeConstraints { make in
-//            make.center.equalToSuperview()
-//            make.width.height.equalTo(150)
-//        }
-//    }
-//    
-//
-//
-//}
 

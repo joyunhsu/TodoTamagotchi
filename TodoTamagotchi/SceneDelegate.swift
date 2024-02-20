@@ -21,11 +21,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         window?.makeKeyAndVisible()
-        let vc = ViewController(petImages: [
-            .egg: UIImage(named: "egg_1-2")!,
-            .chick: UIImage(named: "egg_1-3")!,
-            .fledgling: UIImage(named: "egg_1-4")!,
-            .grownChicken: UIImage(named: "egg_1-5")!
+        let vc = ViewController(petAssetNames: [
+            .egg: "egg_0-0",
+            .crackedEgg: "egg_0-1",
+            .chick: "egg_1-2",
+            .fledgling: "egg_2-3",
+            .grownChicken: "egg_3-4",
+            .finishLineChicken: "egg_4-5"
         ])
         window?.rootViewController = vc
     }
