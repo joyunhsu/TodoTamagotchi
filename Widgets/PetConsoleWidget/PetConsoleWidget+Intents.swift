@@ -9,10 +9,6 @@ import AppIntents
 import WidgetKit
 import SwiftUI
 
-enum Shared {
-    static let activityState = "activityState"
-}
-
 struct IdleIntent: AppIntent {
 
     static var title: LocalizedStringResource = "Encourage Tamago"

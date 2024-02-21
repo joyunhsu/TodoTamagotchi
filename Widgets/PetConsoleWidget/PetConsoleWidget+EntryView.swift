@@ -33,7 +33,7 @@ extension PetConsoleWidget {
 
                 VStack {
                     Spacer()
-                    HStack(alignment: .center, spacing: 5) {
+                    HStack(alignment: .center, spacing: 4) {
                         let buttonSize = CGSize(width: 44, height: 35)
 
                         Button(intent: IdleIntent()) {

@@ -12,17 +12,16 @@ import WidgetKit
 
 class ViewController: UIViewController {
 
-    let petImages: [Profile.Lifecycle: UIImage]
-    init(petAssetNames: [Profile.Lifecycle: String]) {
-        var images = [Profile.Lifecycle: UIImage]()
-
-        for (lifecycle, assetName) in petAssetNames {
-            if let url = Bundle.main.url(forResource: assetName, withExtension: "gif"),
+    let petImages: [UIImage?]
+    init(petAssetNames: [String], ext: String = "gif") {
+        let images: [UIImage?] = petAssetNames.map { assetName in
+            if let url = Bundle.main.url(forResource: assetName, withExtension: ext),
                let imageData = try? Data(contentsOf: url),
                let gifImage = UIImage.gifImageWithData(imageData) {
-                images[lifecycle] = gifImage
+                return gifImage
             } else {
                 print("Failed to load GIF for asset name: \(assetName)")
+                return nil
             }
         }
 
@@ -36,13 +35,11 @@ class ViewController: UIViewController {
 
     let petView: UIImageView = {
         let petView = UIImageView()
-        petView.translatesAutoresizingMaskIntoConstraints = false
         return petView
     }()
 
     let descLabel: UILabel = {
         let descLabel = UILabel()
-        descLabel.translatesAutoresizingMaskIntoConstraints = false
         descLabel.numberOfLines = 0
         descLabel.backgroundColor = .clear
 
@@ -57,7 +54,7 @@ class ViewController: UIViewController {
                 .font: UIFont.descriptionLabel ?? .systemFont(ofSize: 13),
                 .foregroundColor: UIColor.label,
                 .paragraphStyle: paragraphStyle
-        ])
+            ])
         descLabel.attributedText = attributedString
         return descLabel
     }()
@@ -165,11 +162,14 @@ class ViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
+        profile = localService.getProfile()
+
         Task {
             do {
                 profile = try await remoteService.getProfile()
+                localService.updateProfile(profile)
             } catch {
-                profile = .init(lifecycle: .egg)
+                profile = .init()
                 print(error)
             }
         }
@@ -182,88 +182,108 @@ class ViewController: UIViewController {
                 loadingView.startAnimating()
                 descLabel.text = "Loading..."
                 profile = try await remoteService.updateProfile()
+                localService.updateProfile(profile)
                 loadingView.stopAnimating()
                 WidgetCenter.shared.reloadTimelines(ofKind: "petConsoleWidget")
             } catch {
-                profile = .init(lifecycle: .chick)
+                profile = .init()
                 print(error)
             }
         }
     }
 
     let remoteService = RemoteService()
+    let localService = LocalService()
 
     var profile: Profile? {
         didSet {
-            petView.image = (profile?.lifecycle).flatMap { petImages[$0] }
-            descLabel.text = profile?.lifecycle.desc
+            petView.image = profile.flatMap { petImages[$0.progressLevel] }
+            descLabel.text = profile?.desc
+            profile.map { animateWaterDrops($0.effort) }
         }
     }
-}
 
-struct Profile {
-    let lifecycle: Lifecycle
-    enum Lifecycle: String, Decodable {
-        case egg
-        case crackedEgg
-        case chick
-        case fledgling
-        case grownChicken
-        case finishLine
+    func animateWaterDrops(_ amount: Int) {
+        cancellables = []
 
-        var desc: String {
-            switch self {
-            case .egg:
-                return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
-            case .crackedEgg:
-                return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
-            case .chick:
-                return "Just hatched, everything is new, exciting, and a little scary. I'm small but willing to grow."
-            case .fledgling:
-                return "Building strength and learning fast. It's a big world, but bit by bit, I'm conquering it."
-            case .grownChicken:
-                return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
-            case .finishLine:
-                return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
+        let waterDrops = (0 ..< amount).map { _ in
+            let url = Bundle.main.url(forResource: "WaterDrop", withExtension: "webp")!
+            let data = try! Data(contentsOf: url)
+            let image = UIImage(data: data)!
+            let imageView = UIImageView(image: image)
+            return imageView
+        }
+
+        for waterDrop in waterDrops {
+            view.addSubview(waterDrop)
+
+            var vertical: Constraint?
+            waterDrop.snp.makeConstraints { make in
+                make.size.equalTo(30)
+                make.centerX.equalTo(view).offset(Int.random(in: -100...100))
+                vertical = make.centerY.equalTo(petView.snp.top).constraint
             }
+
+            let petHeight = Timer.publish(every: 0.1, on: .main, in: .default)
+                .autoconnect()
+                .map { [petView] _ in Int(petView.frame.height) }
+
+            let counter = Timer.publish(every: 0.1, on: .main, in: .default)
+                .autoconnect()
+                .scan(0) { count, _ in count + 1 }
+
+            let offset = Publishers
+                .CombineLatest(petHeight, counter)
+                .map { petHeight, counter in (counter % (petHeight / 5)) * 5 }
+
+            Publishers
+                .CombineLatest(offset, petHeight)
+                .handleEvents(receiveCancel: { waterDrop.removeFromSuperview() })
+                .sink(receiveValue: { offset, petHeight in
+                    vertical?.update(offset: offset)
+                    waterDrop.alpha = CGFloat(abs(offset - petHeight/2))
+                })
+                .store(in: &cancellables)
+        }
+    }
+
+    var cancellables: [AnyCancellable] = []
+}
+
+struct Profile: Codable {
+    let progressLevel: Int
+    let effort: Int
+    var desc: String {
+        switch progressLevel {
+        case 5: return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
+        case 4: return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
+        case 3: return "Building strength and learning fast. It's a big world, but bit by bit, I'm conquering it."
+        case 2: return "Just hatched, everything is new, exciting, and a little scary. I'm small but willing to grow."
+        case 1: return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
+        default: return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
         }
     }
 }
 
-extension Profile: Decodable {
-    enum CodingKeys: CodingKey {
-        case completeness
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let completeness = try container.decode(Double.self, forKey: .completeness)
-        let epsilon = 0.0001
-
-        switch completeness {
-        case 0.8 ..< 1:
-            self.lifecycle = .finishLine
-        case 0.6 ..< 0.8:
-            self.lifecycle = .grownChicken
-        case 0.4 ..< 0.6:
-            self.lifecycle = .fledgling
-        case 0.2 ..< 0.4:
-            self.lifecycle = .chick
-        case epsilon ..< 0.2:
-            self.lifecycle = .crackedEgg
-        default:
-            self.lifecycle = .egg
-        }
+extension Profile {
+    init() {
+        self.init(progressLevel: 0, effort: 0)
     }
 }
 
 class RemoteService {
+    struct Response: Decodable {
+        let progressLevel: Int
+        let completeness: Double
+        let velocity: Double
+    }
+
     func getProfile() async throws -> Profile {
         let url = URL(string: "https://sprint-tamagotchi.vercel.app/api/stats?value=8.35")!
         let (data, _) = try await URLSession.shared.data(from: url)
         String(data: data, encoding: .utf8).map { print($0) }
-        let profile = try JSONDecoder().decode(Profile.self, from: data)
-        save(profile)
+        let response = try JSONDecoder().decode(Response.self, from: data)
+        let profile = Profile(progressLevel: response.progressLevel, effort: Int(abs(response.velocity/0.05)))
         return profile
     }
 
@@ -273,14 +293,36 @@ class RemoteService {
         request.httpMethod = "POST"
         let (data, _) = try await URLSession.shared.data(for: request)
         String(data: data, encoding: .utf8).map { print($0) }
-        let profile = try JSONDecoder().decode(Profile.self, from: data)
-        save(profile)
+        let response = try JSONDecoder().decode(Response.self, from: data)
+        let profile = Profile(progressLevel: response.progressLevel, effort: Int(abs(response.velocity/0.05)))
         return profile
     }
+}
 
-    private func save(_ profile: Profile) {
-        let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
-        userDefaults?.set(profile.lifecycle.rawValue, forKey: "LifeCycleStringKey")
+class LocalService {
+    let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")!
+    let savedProfileKey = "SavedProfileKey"
+    let savedLevelKey = "ProgressLevelIntKey"
+
+    func getProfile() -> Profile? {
+        guard let data = userDefaults.data(forKey: savedProfileKey) else { return nil }
+        do {
+            return try JSONDecoder().decode(Profile.self, from: data)
+        } catch {
+            print(error)
+            return nil
+        }
+    }
+
+    func updateProfile(_ profile: Profile?) {
+        guard let profile, let data = try? JSONEncoder().encode(profile) else {
+            userDefaults.removeObject(forKey: savedProfileKey)
+            userDefaults.synchronize()
+            return
+        }
+        userDefaults.set(data, forKey: savedProfileKey)
+        userDefaults.setValue(profile.progressLevel, forKey: savedLevelKey)
+        userDefaults.synchronize()
     }
 }
 

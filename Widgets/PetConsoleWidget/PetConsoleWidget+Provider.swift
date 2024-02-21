@@ -47,8 +47,8 @@ extension PetConsoleWidget {
             let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
             // From widget
             guard let activityState = UserDefaults.standard.string(forKey: Shared.activityState),
-                    let lifeCycleString = userDefaults?.string(forKey: "LifeCycleStringKey") else {
-                return Profile(activity: .idle(lifecycle: .egg))
+                  let progressLevelInt = userDefaults?.integer(forKey: Shared.progressLevelIntKey) else {
+                return Profile(activity: .idle(progressLevel: 0))
             }
 
             switch activityState {
@@ -57,8 +57,7 @@ extension PetConsoleWidget {
             case "sleep":
                 return Profile(activity: .sleep)
             default:
-                let lifeCycle = Profile.Lifecycle(rawValue: lifeCycleString)
-                return Profile(activity: .idle(lifecycle: lifeCycle ?? .egg))
+                return Profile(activity: .idle(progressLevel: progressLevelInt))
             }
         }
     }

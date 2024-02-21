@@ -13,11 +13,10 @@ struct WidgetsBundle: WidgetBundle {
     
     let profile: Profile = {
         let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
-        if let lifeCycleString = userDefaults?.string(forKey: "LifeCycleStringKey"),
-           let lifeCycle = Profile.Lifecycle(rawValue: lifeCycleString) {
-            return Profile(activity: .idle(lifecycle: lifeCycle))
+        if let progressLevelInt = userDefaults?.integer(forKey: "LifeCycleStringKey") {
+            return Profile(activity: .idle(progressLevel: progressLevelInt))
         } else {
-            return Profile(activity: .idle(lifecycle: .egg))
+            return Profile(activity: .idle(progressLevel: 0))
         }
     }()
 

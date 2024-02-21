@@ -22,13 +22,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.windowScene = windowScene
         window?.makeKeyAndVisible()
         let vc = ViewController(petAssetNames: [
-            .egg: "egg_0-0",
-            .crackedEgg: "egg_0-1",
-            .chick: "egg_1-2",
-            .fledgling: "egg_2-3",
-            .grownChicken: "egg_3-4",
-            .finishLine: "egg_4-5"
+            "egg_0-0",
+            "egg_0-1",
+            "egg_1-2",
+            "egg_2-3",
+            "egg_3-4",
+            "egg_4-5"
         ])
+//        let vc = ViewController(petAssetNames: [
+//            .egg: "egg_0-0",
+//            .crackedEgg: "egg_0-1",
+//            .chick: "egg_1-2",
+//            .fledgling: "egg_2-3",
+//            .grownChicken: "egg_3-4",
+//            .finishLine: "egg_4-5"
+//        ])
         window?.rootViewController = vc
     }
 

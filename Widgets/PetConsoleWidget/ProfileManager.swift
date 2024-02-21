@@ -7,32 +7,35 @@
 
 import Foundation
 
-struct Profile {
+enum Shared {
+    static let activityState = "activityState"
+    static let progressLevelIntKey = "ProgressLevelIntKey"
+}
 
-//    let lifecycle: Lifecycle
+struct Profile {
     let activity: Activity
 
     enum Activity {
-        case idle(lifecycle: Lifecycle)
+        case idle(progressLevel: Int)
         case heart
         case sleep
 
         var assetNamePrefix: String {
             switch self {
-            case let .idle(lifecycle):
-                switch lifecycle {
-                case .egg:
-                    return "egg_0"
-                case .crackedEgg:
+            case let .idle(progressLevel):
+                switch progressLevel {
+                case 1:
                     return "egg_1"
-                case .chick:
+                case 2:
                     return "egg_2"
-                case .fledgling:
+                case 3:
                     return "egg_3"
-                case .grownChicken:
+                case 4:
                     return "egg_4"
-                case .finishLine:
+                case 5:
                     return "egg_5"
+                default:
+                    return "egg_0"
                 }
             case .heart:
                 return "egg_heart"
@@ -42,25 +45,15 @@ struct Profile {
         }
     }
 
-    enum Lifecycle: String {
-        case egg
-        case crackedEgg
-        case chick
-        case fledgling
-        case grownChicken
-        case finishLine
-    }
-}
-
-//extension Profile.Lifecycle {
-//    func imageName(forFrame frame: Int) -> String {
-//        // Ensure the frame number is within the valid range of 0 to 3
-//        guard frame >= 0 && frame < 4 else {
-//            fatalError("Invalid frame number. Frame must be between 0 and 3.")
-//        }
-//        return "\(self.assetNamePrefix)-\(frame)"
+//    enum Lifecycle: String {
+//        case egg
+//        case crackedEgg
+//        case chick
+//        case fledgling
+//        case grownChicken
+//        case finishLine
 //    }
-//}
+}
 
 extension Profile.Activity {
     func imageName(forFrame frame: Int) -> String {
