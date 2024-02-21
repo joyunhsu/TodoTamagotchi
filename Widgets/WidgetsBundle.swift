@@ -15,9 +15,9 @@ struct WidgetsBundle: WidgetBundle {
         let userDefaults = UserDefaults(suiteName: "group.com.joyunhsu.todoTamagotchi")
         if let lifeCycleString = userDefaults?.string(forKey: "LifeCycleStringKey"),
            let lifeCycle = Profile.Lifecycle(rawValue: lifeCycleString) {
-            return Profile(lifecycle: lifeCycle)
+            return Profile(activity: .idle(lifecycle: lifeCycle))
         } else {
-            return Profile(lifecycle: .egg)
+            return Profile(activity: .idle(lifecycle: .egg))
         }
     }()
 

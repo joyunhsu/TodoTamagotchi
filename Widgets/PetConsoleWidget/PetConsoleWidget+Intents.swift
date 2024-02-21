@@ -9,11 +9,16 @@ import AppIntents
 import WidgetKit
 import SwiftUI
 
+enum Shared {
+    static let activityState = "activityState"
+}
+
 struct HeartIntent: AppIntent {
 
     static var title: LocalizedStringResource = "Encourage Tamago"
 
     func perform() async throws -> some IntentResult {
+        UserDefaults.standard.setValue("heart", forKey: Shared.activityState)
         return .result()
     }
 }
@@ -23,6 +28,7 @@ struct SleepIntent: AppIntent {
     static var title: LocalizedStringResource = "Let Tamago sleep"
 
     func perform() async throws -> some IntentResult {
+        UserDefaults.standard.setValue("sleep", forKey: Shared.activityState)
         return .result()
     }
 }
