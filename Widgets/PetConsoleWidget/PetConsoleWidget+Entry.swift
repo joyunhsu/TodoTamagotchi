@@ -17,6 +17,6 @@ extension PetConsoleWidget {
 
 extension PetConsoleWidget.Entry {
     static var placeholder: Self {
-        .init(petAssetName: "frame1")
+        .init(petAssetName: "egg_3-0")
     }
 }
