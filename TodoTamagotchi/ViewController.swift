@@ -63,6 +63,7 @@ class ViewController: UIViewController {
         let refreshBtn = UIButton()
         refreshBtn.setImage(UIImage(named: "btn_refresh"), for: .normal)
         refreshBtn.addTarget(self, action: #selector(refresh), for: .touchUpInside)
+        refreshBtn.isEnabled = false
         return refreshBtn
     }()
 
@@ -157,19 +158,20 @@ class ViewController: UIViewController {
         loadingView.snp.makeConstraints { make in
             make.edges.equalTo(refreshBtn)
         }
+
+        profile = localService.getProfile()
+        refresh()
+
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        profile = localService.getProfile()
 
         Task {
             do {
                 profile = try await remoteService.getProfile()
                 localService.updateProfile(profile)
             } catch {
-                profile = .init()
                 print(error)
             }
         }
@@ -180,15 +182,17 @@ class ViewController: UIViewController {
         Task {
             do {
                 loadingView.startAnimating()
-                descLabel.text = "Loading..."
+                defer { loadingView.stopAnimating() }
+//                descLabel.text = "Loading..."
                 profile = try await remoteService.updateProfile()
                 localService.updateProfile(profile)
-                loadingView.stopAnimating()
                 WidgetCenter.shared.reloadTimelines(ofKind: "petConsoleWidget")
             } catch {
-                profile = .init()
+                profile = profile
                 print(error)
             }
+
+            self.refresh()
         }
     }
 
@@ -199,75 +203,132 @@ class ViewController: UIViewController {
         didSet {
             petView.image = profile.flatMap { petImages[$0.progressLevel] }
             descLabel.text = profile?.desc
-            profile.map { animateWaterDrops($0.effort) }
+            profile.map { animateWaterDrops($0.steps) }
+
+            if profile?.desc?.isEmpty ?? true, let oldDesc = oldValue?.desc {
+                profile?.desc = oldDesc
+                descLabel.text = profile?.desc
+            }
         }
     }
 
+    var maxWaterDrops = 0
+    var runningWaterDrops = 0
     func animateWaterDrops(_ amount: Int) {
-        cancellables = []
+        maxWaterDrops = amount
 
-        let waterDrops = (0 ..< amount).map { _ in
+        for _ in 0 ..< amount {
+            let time = TimeInterval(Int.random(in: 0...amount))
+            animateWaterDropUntilUnavailable(startedAfter: time)
+        }
+    }
+
+    func animateWaterDropUntilUnavailable(startedAfter: TimeInterval) {
+        Timer
+            .publish(every: startedAfter, on: .main, in: .default)
+            .autoconnect()
+            .first()
+            .sink(receiveValue: { [weak self] _ in
+                self?.animateWaterDropUntilUnavailable()
+            })
+            .store(in: &cancellables)
+    }
+
+    func animateWaterDropUntilUnavailable() {
+        var animateWaterDropUntilUnavailable: (() -> Void)?
+        animateWaterDropUntilUnavailable = { [weak self] in
+            guard let self else { return }
+            animateWaterDrop { [weak self] in
+                guard let self else { return }
+                if runningWaterDrops <= maxWaterDrops {
+                    animateWaterDropUntilUnavailable?()
+                    return
+                }
+                runningWaterDrops -= 1
+            }
+        }
+
+        self.runningWaterDrops += 1
+        animateWaterDropUntilUnavailable?()
+    }
+
+    func animateWaterDrop(completion: @escaping () -> Void) {
+        let waterDrop: UIView = {
             let url = Bundle.main.url(forResource: "WaterDrop", withExtension: "webp")!
             let data = try! Data(contentsOf: url)
             let image = UIImage(data: data)!
             let imageView = UIImageView(image: image)
             return imageView
+        }()
+
+        let hRange = -80...80
+        let vRange = 30...150
+        let vGranularity = 5
+
+        view.addSubview(waterDrop)
+        waterDrop.isHidden = true
+
+        var vertical: Constraint?
+        waterDrop.snp.makeConstraints { make in
+            make.size.equalTo(30)
+            make.centerX.equalTo(view).offset(Int.random(in: hRange))
+            vertical = make.centerY.equalTo(petView.snp.top).constraint
         }
 
-        for waterDrop in waterDrops {
-            view.addSubview(waterDrop)
+        let timer = Timer.publish(every: 0.5, on: .main, in: .default).autoconnect()
 
-            var vertical: Constraint?
-            waterDrop.snp.makeConstraints { make in
-                make.size.equalTo(30)
-                make.centerX.equalTo(view).offset(Int.random(in: -100...100))
-                vertical = make.centerY.equalTo(petView.snp.top).constraint
+        let petHeight = timer
+            .map { [petView] _ in Int(petView.frame.height) }
+            .removeDuplicates()
+
+        let counter = timer
+            .scan(0) { count, _ in count + 1 }
+
+        let offset = Publishers
+            .CombineLatest(petHeight, counter)
+            .map { petHeight, counter in
+                let height = vRange.upperBound-vRange.lowerBound
+                let y = vRange.lowerBound
+                let offsetFromY = (counter % (height / vGranularity)) * vGranularity
+                return y + offsetFromY
             }
 
-            let petHeight = Timer.publish(every: 0.1, on: .main, in: .default)
-                .autoconnect()
-                .map { [petView] _ in Int(petView.frame.height) }
-
-            let counter = Timer.publish(every: 0.1, on: .main, in: .default)
-                .autoconnect()
-                .scan(0) { count, _ in count + 1 }
-
-            let offset = Publishers
-                .CombineLatest(petHeight, counter)
-                .map { petHeight, counter in (counter % (petHeight / 5)) * 5 }
-
-            Publishers
-                .CombineLatest(offset, petHeight)
-                .handleEvents(receiveCancel: { waterDrop.removeFromSuperview() })
-                .sink(receiveValue: { offset, petHeight in
-                    vertical?.update(offset: offset)
-                    waterDrop.alpha = CGFloat(abs(offset - petHeight/2))
-                })
-                .store(in: &cancellables)
-        }
+        var cancellable: AnyCancellable?
+        cancellable = offset
+            .sink(receiveValue: { offset in
+                guard offset < vRange.upperBound - vGranularity else {
+                    waterDrop.removeFromSuperview()
+                    cancellable?.cancel()
+                    completion()
+                    return
+                }
+                waterDrop.isHidden = false
+                vertical?.update(offset: offset)
+            })
     }
 
     var cancellables: [AnyCancellable] = []
 }
 
-struct Profile: Codable {
+class Profile: Codable {
     let progressLevel: Int
-    let effort: Int
-    var desc: String {
-        switch progressLevel {
-        case 5: return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
-        case 4: return "I'm a full-grown chicken now! Capable, strong, and contributing to the world."
-        case 3: return "Building strength and learning fast. It's a big world, but bit by bit, I'm conquering it."
-        case 2: return "Just hatched, everything is new, exciting, and a little scary. I'm small but willing to grow."
-        case 1: return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
-        default: return "As an egg, I'm sturdy but fragile, brimming with potential and waiting to break free."
-        }
+    let steps: Int
+    var desc: String?
+
+    init(progressLevel: Int, steps: Int, desc: String? = nil) {
+        self.progressLevel = progressLevel
+        self.steps = steps
+        self.desc = desc
     }
 }
 
 extension Profile {
-    init() {
-        self.init(progressLevel: 0, effort: 0)
+    convenience init() {
+        self.init(progressLevel: 0, steps: 0, desc: nil)
+    }
+
+    convenience init(response: RemoteService.Response) {
+        self.init(progressLevel: response.progressLevel, steps: response.steps, desc: response.desc)
     }
 }
 
@@ -275,7 +336,9 @@ class RemoteService {
     struct Response: Decodable {
         let progressLevel: Int
         let completeness: Double
-        let velocity: Double
+        let velocity: Double?
+        let steps: Int
+        let desc: String?
     }
 
     func getProfile() async throws -> Profile {
@@ -283,7 +346,7 @@ class RemoteService {
         let (data, _) = try await URLSession.shared.data(from: url)
         String(data: data, encoding: .utf8).map { print($0) }
         let response = try JSONDecoder().decode(Response.self, from: data)
-        let profile = Profile(progressLevel: response.progressLevel, effort: Int(abs(response.velocity/0.05)))
+        let profile = Profile(response: response)
         return profile
     }
 
@@ -294,7 +357,7 @@ class RemoteService {
         let (data, _) = try await URLSession.shared.data(for: request)
         String(data: data, encoding: .utf8).map { print($0) }
         let response = try JSONDecoder().decode(Response.self, from: data)
-        let profile = Profile(progressLevel: response.progressLevel, effort: Int(abs(response.velocity/0.05)))
+        let profile = Profile(response: response)
         return profile
     }
 }
@@ -317,6 +380,7 @@ class LocalService {
     func updateProfile(_ profile: Profile?) {
         guard let profile, let data = try? JSONEncoder().encode(profile) else {
             userDefaults.removeObject(forKey: savedProfileKey)
+            userDefaults.removeObject(forKey: savedLevelKey)
             userDefaults.synchronize()
             return
         }
