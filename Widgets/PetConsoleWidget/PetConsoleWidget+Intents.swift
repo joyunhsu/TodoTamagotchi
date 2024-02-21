@@ -13,6 +13,16 @@ enum Shared {
     static let activityState = "activityState"
 }
 
+struct IdleIntent: AppIntent {
+
+    static var title: LocalizedStringResource = "Encourage Tamago"
+
+    func perform() async throws -> some IntentResult {
+        UserDefaults.standard.setValue("idle", forKey: Shared.activityState)
+        return .result()
+    }
+}
+
 struct HeartIntent: AppIntent {
 
     static var title: LocalizedStringResource = "Encourage Tamago"

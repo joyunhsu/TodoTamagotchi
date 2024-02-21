@@ -32,13 +32,24 @@ extension PetConsoleWidget {
                     .clipped() // Ensure the image does not overflow the bounds
 
                 VStack {
-                    Spacer() // Pushes the HStack to the bottom
-                    HStack(alignment: .center, spacing: 8) {
+                    Spacer()
+                    HStack(alignment: .center, spacing: 5) {
+                        let buttonSize = CGSize(width: 44, height: 35)
+
+                        Button(intent: IdleIntent()) {
+                            Image("button_idle")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: buttonSize.width, height: buttonSize.height)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(0)
+
                         Button(intent: HeartIntent()) {
                             Image("button_heart")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 56, height: 34)
+                                .frame(width: buttonSize.width, height: buttonSize.height)
                         }
                         .buttonStyle(PlainButtonStyle()) // Apply plain button style to remove default padding and background
                         .padding(0) // Explicitly set padding to 0 if needed
@@ -47,7 +58,7 @@ extension PetConsoleWidget {
                             Image("button_sleep")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 56, height: 34)
+                                .frame(width: buttonSize.width, height: buttonSize.height)
                         }
                         .buttonStyle(PlainButtonStyle()) // Apply plain button style to remove default padding and background
                         .padding(0) // Explicitly set padding to 0 if needed
