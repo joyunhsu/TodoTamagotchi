@@ -15,6 +15,12 @@ extension PetConsoleWidget {
 
         var body: some View {
             ZStack {
+                Image("widget_background")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+
                 VStack {
                     Image(entry.petAssetName)
                         .resizable()
@@ -68,7 +74,10 @@ extension PetConsoleWidget {
                 }
             }
             .edgesIgnoringSafeArea(.all) // If you want the content to fill the entire widget view, including the edges
-            .containerBackground(Color(uiColor: UIColor(red: 83/255, green: 180/255, blue: 65/255, alpha: 1.0)), for: .widget)
+            .containerBackground(
+                Color(uiColor: UIColor(red: 83/255, green: 180/255, blue: 65/255, alpha: 1.0)),
+                for: .widget
+            )
         }
     }
 }

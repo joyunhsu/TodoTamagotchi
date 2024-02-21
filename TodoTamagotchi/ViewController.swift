@@ -63,7 +63,7 @@ class ViewController: UIViewController {
         let refreshBtn = UIButton()
         refreshBtn.setImage(UIImage(named: "btn_refresh"), for: .normal)
         refreshBtn.addTarget(self, action: #selector(refresh), for: .touchUpInside)
-        refreshBtn.isEnabled = false
+//        refreshBtn.isEnabled = false
         return refreshBtn
     }()
 
@@ -160,7 +160,7 @@ class ViewController: UIViewController {
         }
 
         profile = localService.getProfile()
-        refresh()
+        polling()
 
     }
 
@@ -183,16 +183,26 @@ class ViewController: UIViewController {
             do {
                 loadingView.startAnimating()
                 defer { loadingView.stopAnimating() }
-//                descLabel.text = "Loading..."
                 profile = try await remoteService.updateProfile()
+            } catch {
+                print(error)
+            }
+        }
+    }
+
+    func polling() {
+        Task {
+            do {
+//                descLabel.text = "Loading..."
+                profile = try await remoteService.getProfile()
                 localService.updateProfile(profile)
                 WidgetCenter.shared.reloadTimelines(ofKind: "petConsoleWidget")
             } catch {
-                profile = profile
                 print(error)
             }
-
-            self.refresh()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.polling()
+            }
         }
     }
 
@@ -235,6 +245,10 @@ class ViewController: UIViewController {
     }
 
     func animateWaterDropUntilUnavailable() {
+        guard runningWaterDrops < maxWaterDrops else {
+            return
+        }
+
         var animateWaterDropUntilUnavailable: (() -> Void)?
         animateWaterDropUntilUnavailable = { [weak self] in
             guard let self else { return }
