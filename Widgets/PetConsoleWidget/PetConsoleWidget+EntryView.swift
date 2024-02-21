@@ -43,8 +43,8 @@ extension PetConsoleWidget {
                         .buttonStyle(PlainButtonStyle()) // Apply plain button style to remove default padding and background
                         .padding(0) // Explicitly set padding to 0 if needed
 
-                        Button(intent: RestIntent()) {
-                            Image("button_rest")
+                        Button(intent: SleepIntent()) {
+                            Image("button_sleep")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 56, height: 34)

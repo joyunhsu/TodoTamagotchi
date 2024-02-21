@@ -11,16 +11,16 @@ import SwiftUI
 
 struct HeartIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Feed tamagotchi"
+    static var title: LocalizedStringResource = "Encourage Tamago"
 
     func perform() async throws -> some IntentResult {
         return .result()
     }
 }
 
-struct RestIntent: AppIntent {
+struct SleepIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Play with tamagotchi"
+    static var title: LocalizedStringResource = "Let Tamago sleep"
 
     func perform() async throws -> some IntentResult {
         return .result()
